@@ -5,11 +5,11 @@ import { UsersService } from 'src/users/users.service';
 import { SignInRequest } from './dto/requests/singin.request';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { User } from 'src/users/schemas/user.schema';
 import { JwtPayload } from './interface/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {
-
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
@@ -17,10 +17,10 @@ export class AuthService {
 
   async signUp(signUpRequest: SignUpRequest): Promise<AuthResponse> {
     const user = await this.usersService.create(signUpRequest);
-
+    const token = this.getJwtToken({ id: user._id });
     return {
       user,
-      token: this.getJwtToken({ id: user._id }),
+      token,
     };
   }
 
@@ -33,17 +33,38 @@ export class AuthService {
     }
 
     const { password: _, ...userData } = user.toJSON();
-    
+    const token = this.getJwtToken({ id: user._id });
 
     return {
       user: userData,
-      token: this.getJwtToken({ id: user.id }),
+      token,
     };
   }
 
-  getJwtToken(payload: JwtPayload) {
-    const token = this.jwtService.sign(payload);
-    return token;
+  async validateUser(id: string): Promise<User> {
+    const user = await this.usersService.findUserById(id);
+
+    if (!user) {
+      throw new UnauthorizedException(`User not found`);
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedException(`User is inactive, talk with an admin`);
+    }
+
+    return user;
   }
 
+  private getJwtToken(payload: JwtPayload) {
+    return this.jwtService.sign(payload);
+  }
+
+  checkToken(user: User): AuthResponse {
+    const token = this.getJwtToken({ id: user!._id });
+    
+    return {
+      user,
+      token
+    };
+  }
 }

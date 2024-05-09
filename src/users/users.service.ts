@@ -1,15 +1,19 @@
-import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { User } from './entities/user.entity';
+import { User } from './schemas/user.schema';
 import { Model } from 'mongoose';
 
 import * as bcrypt from 'bcrypt';
 import { SignUpRequest } from 'src/auth/dto';
+import { ValidRoles } from 'src/auth/enums/valid-roles.enum';
 
 @Injectable()
 export class UsersService {
-
   constructor(
     @InjectModel(User.name)
     private userModel: Model<User>,
@@ -18,12 +22,12 @@ export class UsersService {
   async create(signUpRequest: SignUpRequest): Promise<User> {
     try {
       const { password, ...userData } = signUpRequest;
-    
+
       const newUser = new this.userModel({
         ...userData,
         password: bcrypt.hashSync(password, 10),
       });
-      
+
       await newUser.save();
       const { password: _, ...user } = newUser.toJSON();
 
@@ -58,6 +62,4 @@ export class UsersService {
   remove(id: number) {
     return `This action removes a #${id} user`;
   }
-
- 
 }

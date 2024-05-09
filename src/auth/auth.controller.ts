@@ -1,7 +1,13 @@
-import { Controller, Post, Body, Get, Request, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthResponse, SignInRequest, SignUpRequest } from './dto';
-import { AuthGuard } from './guards/auth.guard';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { CurrentUser } from './decorators/current-user.decorator';
+import { User } from 'src/users/schemas/user.schema';
+import { RoleProtected } from './decorators/role-protected.decorator';
+import { ValidRoles } from './enums/valid-roles.enum';
+import { UserRoleGuard } from './guards/user-role.guard';
+import { Auth } from './decorators/auth.decorator';
 
 
 @Controller('auth')
@@ -18,13 +24,12 @@ export class AuthController {
     return this.authService.signIn(signInRequest);
   }
 
-  @UseGuards(AuthGuard)
   @Get('check-token')
-  checkToken(@Request() request: Request): AuthResponse {
-    const user = request['user'];
-    return { 
-      user,
-      token: this.authService.getJwtToken({ id: user._id }),
-     };
+  @Auth(ValidRoles.USER)
+  checkToken(
+    @CurrentUser() user: User
+  ): AuthResponse {
+    return this.authService.checkToken(user);
   }
+ 
 }

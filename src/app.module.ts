@@ -1,17 +1,20 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { OrdersModule } from './orders/orders.module';
+import { ProductsModule } from './products/products.module';
+import { envs } from './config/envs';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
-    MongooseModule.forRoot(process.env.MONGO_URI, {
-      dbName: process.env.MONGO_DB_NAME,
+    MongooseModule.forRoot(envs.mongoUri, {
+      dbName: envs.mongoDbName,
     }),
     UsersModule,
     AuthModule,
+    OrdersModule,
+    ProductsModule,
   ],
   controllers: [],
   providers: [],

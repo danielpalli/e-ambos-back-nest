@@ -1,6 +1,8 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, Matches, MaxLength, MinLength } from 'class-validator';
 
 export class SignUpRequest {
+  @ApiProperty({ default: 'John', description: 'The first name of the user' })
   @IsNotEmpty({ message: 'El nombre no puede estar vacío' })
   @MinLength(3, { message: 'El nombre debe tener al menos 3 caracteres' })
   @MaxLength(50, { message: 'El nombre no puede tener más de 50 caracteres' })
