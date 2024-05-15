@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -52,6 +53,7 @@ export class UsersService {
   async findUserById(id: string) {
     const user = await this.userModel.findById(id);
     const { password, ...userData } = user.toJSON();
+
     return userData;
   }
 
@@ -61,5 +63,20 @@ export class UsersService {
 
   remove(id: number) {
     return `This action removes a #${id} user`;
+  }
+
+  async addOrder(userId: string, orderId: string) {
+    try {
+      const user = await this.userModel.findById(userId);
+
+      if (!user) {
+        throw new NotFoundException('Usuario no encontrado');
+      }
+
+      user.ordersIds.push(orderId);
+      await user.save();
+    } catch (error) {
+      throw new InternalServerErrorException('Error al agregar la orden al usuario');
+    }
   }
 }

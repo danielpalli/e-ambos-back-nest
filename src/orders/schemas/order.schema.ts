@@ -11,15 +11,12 @@ export class Order {
   status: string;
   @Prop({ type: Boolean, default: false })
   paid: boolean;
-  @Prop({ type: Date, default: null})
+  @Prop({ type: Date, default: null })
   paidAt: Date;
-
   @Prop({ type: [OrderItem], required: true })
   orderItem: OrderItem[];
-
   @Prop({ type: String })
   userId: string;
-
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

@@ -1,4 +1,3 @@
-
 import 'dotenv/config';
 import * as joi from 'joi';
 
@@ -18,9 +17,8 @@ const envVarsSchema = joi.object({
 
 const { error, value  } = envVarsSchema.validate(process.env);
 
-if (error) {
-  throw new Error(`Config validation error: ${error.message}`);
-}
+if (error) 
+  throw new Error(`Error en la validación de las variables de entorno: ${error.message}`);
 
 const envVars: EnvVars  = value;
 

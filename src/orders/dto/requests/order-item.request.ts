@@ -1,6 +1,6 @@
 import { IsMongoId, IsNumber, IsPositive } from "class-validator";
 
-export class OrderItemDto {
+export class OrderItemRequest {
   @IsNumber() @IsPositive()
   quantity: number;
   @IsNumber() @IsPositive()

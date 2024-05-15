@@ -8,20 +8,17 @@ import { envs } from 'src/config/envs';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(
-    private readonly authService: AuthService,
-  ) {
+  constructor(private readonly authService: AuthService) {
     super({
       secretOrKey: envs.jwtSecret,
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
     });
   }
 
-  async validate(payload: JwtPayload): Promise<User> {
+  validate = async (payload: JwtPayload): Promise<User> => {
     const { id } = payload;
-
-    const user = await this.authService.validateUser( id );
+    const user = await this.authService.validateUser(id);
+    
     return user;
-
   }
 }

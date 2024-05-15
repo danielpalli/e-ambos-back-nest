@@ -1,16 +1,8 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Query,
-  Patch,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, Patch } from '@nestjs/common';
 import { OrdersService } from './orders.service';
-import { CreateOrderDto, OrderPaginationDto, PaidOrderDto, StatusDto } from './dto';
+import { CreateOrderRequest, OrderPaginationRequest, PaidOrderDto, StatusDto } from './dto';
 import { Order } from './schemas/order.schema';
-import { PaginationDto } from 'src/common';
+import { PaginationRequest } from 'src/common';
 import { Auth, CurrentUser } from 'src/auth/decorators';
 import { User } from 'src/users/schemas/user.schema';
 import { ValidRoles } from 'src/auth/enums/valid-roles.enum';
@@ -21,12 +13,15 @@ export class OrdersController {
 
   @Post()
   @Auth(ValidRoles.USER)
-  create(@Body() createOrderDto: CreateOrderDto, @CurrentUser() user: User) {
-    return this.ordersService.create(createOrderDto, user._id);
+  create(@Body() createOrderRequest: CreateOrderRequest, @CurrentUser() user: User) {
+    return this.ordersService.create({
+      ...createOrderRequest,
+      userId: user._id.toString(),
+    });
   }
 
   @Get()
-  findAll(@Query() orderPaginationDto: OrderPaginationDto) {
+  findAll(@Query() orderPaginationDto: OrderPaginationRequest) {
     return this.ordersService.findAll(orderPaginationDto);
   }
 
@@ -38,7 +33,7 @@ export class OrdersController {
   @Get(':status')
   findAllByStatus(
     @Param() statusDto: StatusDto,
-    @Query() paginationDto: PaginationDto,
+    @Query() paginationDto: PaginationRequest,
   ) {
     return this.ordersService.findAll({
       ...paginationDto,
@@ -46,15 +41,16 @@ export class OrdersController {
     });
   }
 
-  @Patch(':id')
+  @Patch('change-status/:id')
   changeStatus(@Param('id') id: string, @Body() statusDto: StatusDto) {
     return this.ordersService.changeStatus({
       _id: id,
       status: statusDto.status,
     });
   }
+
   @Patch('paid')
   paidOrder(@Body() paidOrderDto: PaidOrderDto ) {
-    return this.ordersService.paidOrder( paidOrderDto );
+    return this.ordersService.paidOrder(paidOrderDto);
   }
 }

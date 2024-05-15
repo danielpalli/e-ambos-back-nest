@@ -1,68 +1,69 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Order } from './schemas/order.schema';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { isMongoId } from 'class-validator';
-import { ChangeOrderStatusDto, CreateOrderDto, OrderPaginationDto, PaidOrderDto } from './dto';
+import { ChangeOrderStatusDto, CreateOrderRequest, OrderPaginationRequest, PaidOrderDto } from './dto';
 import { ProductsService } from 'src/products/products.service';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class OrdersService {
   constructor(
     @InjectModel(Order.name)
     private orderModel: Model<Order>,
-
-    private readonly productsService: ProductsService
+    private readonly productsService: ProductsService,
+    private readonly userService: UsersService,
   ) {}
 
-  async create(createOrderDto: CreateOrderDto, userId: string) {
-    try {      
-      const productIds = createOrderDto.items.map((item) => item.productId); 
+  create = async (createOrderRequest: CreateOrderRequest): Promise<Order> => {
+    try {
+      const { userId, ...orderRequest } = createOrderRequest;
+      const productIds = orderRequest.items.map((item) => item.productId);
       const products = await this.productsService.validateProducts(productIds);
-      const totalAmount = createOrderDto.items.reduce((acc, orderItem) => {
+      const totalAmount = orderRequest.items.reduce((acc, orderItem) => {
         const price = products.find((product) => product._id.toString() === orderItem.productId).price;
-        return acc + (price * orderItem.quantity);
-      } , 0);
-
-      const totalItems = createOrderDto.items.reduce((acc, orderItem) => acc + orderItem.quantity, 0);
-
-      const orderItemsData = createOrderDto.items.map((orderItem) => ({
+        return acc + price * orderItem.quantity;
+      }, 0);
+      const totalItems = orderRequest.items.reduce((acc, orderItem) => acc + orderItem.quantity, 0);
+      const orderItemsData = orderRequest.items.map((orderItem) => ({
         price: products.find((product) => product._id.toString() === orderItem.productId).price,
         model: products.find((product) => product._id.toString() === orderItem.productId).model,
         productId: orderItem.productId,
-        quantity: orderItem.quantity
-    }));
-
+        quantity: orderItem.quantity,
+      }));
       const order = new this.orderModel({
-        user: userId.toString(),
+        userId: userId.toString(),
         totalAmount,
         totalItems,
-        orderItem: orderItemsData
+        orderItem: orderItemsData,
       });
+      
+      await this.userService.addOrder(userId, order._id.toString());
+      await order.save();
 
-      await order.save(); 
       return order;
     } catch (error) {
       throw new BadRequestException('Error al crear la orden');
-    }  
-  }
+    }
+  };
 
-  async findAll(orderPaginationDto: OrderPaginationDto) {
+  findAll = async (orderPaginationDto: OrderPaginationRequest) => {
     const totalPages = await this.orderModel.countDocuments();
     const currentPage = orderPaginationDto.page;
     const perPage = orderPaginationDto.limit;
     let data;
 
-    console.log(orderPaginationDto.status);
-    
     if (!orderPaginationDto.status) {
-      data = await this.orderModel.find().skip((currentPage - 1) * perPage).limit(perPage);
+      data = await this.orderModel
+        .find()
+        .skip((currentPage - 1) * perPage)
+        .limit(perPage);
     } else {
-      data = await this.orderModel.find({ status: orderPaginationDto.status }).skip((currentPage - 1) * perPage).limit(perPage);
+      data = await this.orderModel
+        .find({ status: orderPaginationDto.status })
+        .skip((currentPage - 1) * perPage)
+        .limit(perPage);
     }
 
     return {
@@ -94,8 +95,8 @@ export class OrdersService {
     await this.findOne(id);
 
     const order = await this.orderModel.findById(id);
- 
-    if (order.status === status) { 
+
+    if (order.status === status) {
       return order;
     }
 
@@ -106,7 +107,7 @@ export class OrdersService {
     return order;
   }
 
-  async paidOrder( paidOrderDto: PaidOrderDto ) {
+  async paidOrder(paidOrderDto: PaidOrderDto) {
     const { orderId } = paidOrderDto;
 
     await this.findOne(orderId);
@@ -119,6 +120,5 @@ export class OrdersService {
     await order.save();
 
     return order;
-
   }
 }

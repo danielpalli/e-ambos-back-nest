@@ -8,7 +8,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Product } from './schemas/product.schemas';
 import { Model } from 'mongoose';
-import { PaginationDto } from 'src/common';
+import { PaginationRequest } from 'src/common';
 import { isMongoId } from 'class-validator';
 
 @Injectable()
@@ -28,7 +28,7 @@ export class ProductsService {
     }
   }
 
-  async findAll(paginationDto: PaginationDto) {
+  async findAll(paginationDto: PaginationRequest) {
     const { limit, page } = paginationDto;
     const totalPages = await this.productModel.where().countDocuments();
     const lastPage = Math.ceil(totalPages / limit);
