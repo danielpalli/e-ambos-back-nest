@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserRequest } from './dto/update-user.request';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
 import { Model } from 'mongoose';
@@ -20,7 +20,7 @@ export class UsersService {
     private userModel: Model<User>,
   ) {}
 
-  async create(signUpRequest: SignUpRequest): Promise<User> {
+  create = async (signUpRequest: SignUpRequest): Promise<User> => {
     try {
       const { password, ...userData } = signUpRequest;
 
@@ -38,11 +38,12 @@ export class UsersService {
     }
   }
 
-  findAll(): Promise<User[]> {
+  
+  findAll = (): Promise<User[]> => {
     return this.userModel.find();
   }
 
-  async findOneByEmail(email: string) {
+  findOneByEmail = async (email: string) => {
     try {
       return await this.userModel.findOne({ email });
     } catch (error) {
@@ -50,22 +51,22 @@ export class UsersService {
     }
   }
 
-  async findUserById(id: string) {
+  findUserById = async (id: string) => {
     const user = await this.userModel.findById(id);
     const { password, ...userData } = user.toJSON();
 
     return userData;
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
+  update = (id: number, updateUserRequest: UpdateUserRequest)  =>{
     return `This action updates a #${id} user`;
   }
 
-  remove(id: number) {
+  remove = (id: number) => {
     return `This action removes a #${id} user`;
   }
 
-  async addOrder(userId: string, orderId: string) {
+  addOrder = async (userId: string, orderId: string) => {
     try {
       const user = await this.userModel.findById(userId);
 

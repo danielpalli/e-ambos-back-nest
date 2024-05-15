@@ -3,8 +3,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
+import { CreateProductRequest } from './dto/create-product.request';
+import { UpdateProductRequest } from './dto/update-product.request';
 import { InjectModel } from '@nestjs/mongoose';
 import { Product } from './schemas/product.schemas';
 import { Model } from 'mongoose';
@@ -18,9 +18,9 @@ export class ProductsService {
     private productModel: Model<Product>,
   ) {}
 
-  async create(createProductDto: CreateProductDto): Promise<Product> {
+  create = async(createProductRequest: CreateProductRequest): Promise<Product> => {
     try {
-      const product = new this.productModel(createProductDto);
+      const product = new this.productModel(createProductRequest);
       await product.save();
       return product;
     } catch (error) {
@@ -28,8 +28,8 @@ export class ProductsService {
     }
   }
 
-  async findAll(paginationDto: PaginationRequest) {
-    const { limit, page } = paginationDto;
+  findAll = async (paginationRequest: PaginationRequest) => {
+    const { limit, page } = paginationRequest;
     const totalPages = await this.productModel.where().countDocuments();
     const lastPage = Math.ceil(totalPages / limit);
 
@@ -47,7 +47,7 @@ export class ProductsService {
     };
   }
 
-  async findOne(id: string): Promise<Product> {
+  findOne = async (id: string): Promise<Product> => {
     if (!isMongoId(id)) {
       throw new BadRequestException(`Invalid id: ${id}`);
     }
@@ -61,15 +61,15 @@ export class ProductsService {
     return product;
   }
 
-  async update(
+  update = async (
     id: string,
-    updateProductDto: UpdateProductDto,
-  ): Promise<Product> {
+    updateProductRequest: UpdateProductRequest,
+  ): Promise<Product> => {
     await this.findOne(id);
 
     const product = await this.productModel.findByIdAndUpdate(
       { _id: id },
-      updateProductDto,
+      updateProductRequest,
       {
         new: true,
       },
@@ -78,7 +78,7 @@ export class ProductsService {
     return product;
   }
 
-  async remove(id: string): Promise<Boolean> {
+  remove = async (id: string): Promise<Boolean> => {
     const product = await this.productModel.findByIdAndDelete(id);
 
     if (!product) {
@@ -88,7 +88,7 @@ export class ProductsService {
     return true;
   }
 
-  async validateProducts(ids: string[]) {
+  validateProducts = async (ids: string[]) => {
     ids = Array.from(new Set(ids));
 
     const products = await this.productModel.find({

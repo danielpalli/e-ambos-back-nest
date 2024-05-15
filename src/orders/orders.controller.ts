@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Param, Query, Patch } from '@nestjs/common';
 import { OrdersService } from './orders.service';
-import { CreateOrderRequest, OrderPaginationRequest, PaidOrderDto, StatusDto } from './dto';
+import { CreateOrderRequest, OrderPaginationRequest, PaidOrderRequest, StatusRequest } from './dto';
 import { Order } from './schemas/order.schema';
 import { PaginationRequest } from 'src/common';
 import { Auth, CurrentUser } from 'src/auth/decorators';
@@ -21,8 +21,8 @@ export class OrdersController {
   }
 
   @Get()
-  findAll(@Query() orderPaginationDto: OrderPaginationRequest) {
-    return this.ordersService.findAll(orderPaginationDto);
+  findAll(@Query() orderPaginationRequest: OrderPaginationRequest) {
+    return this.ordersService.findAll(orderPaginationRequest);
   }
 
   @Get('id/:id')
@@ -32,25 +32,25 @@ export class OrdersController {
 
   @Get(':status')
   findAllByStatus(
-    @Param() statusDto: StatusDto,
-    @Query() paginationDto: PaginationRequest,
+    @Param() statusRequest: StatusRequest,
+    @Query() paginationRequest: PaginationRequest,
   ) {
     return this.ordersService.findAll({
-      ...paginationDto,
-      status: statusDto.status,
+      ...paginationRequest,
+      status: statusRequest.status,
     });
   }
 
   @Patch('change-status/:id')
-  changeStatus(@Param('id') id: string, @Body() statusDto: StatusDto) {
+  changeStatus(@Param('id') id: string, @Body() statusRequest: StatusRequest) {
     return this.ordersService.changeStatus({
       _id: id,
-      status: statusDto.status,
+      status: statusRequest.status,
     });
   }
 
   @Patch('paid')
-  paidOrder(@Body() paidOrderDto: PaidOrderDto ) {
-    return this.ordersService.paidOrder(paidOrderDto);
+  paidOrder(@Body() paidOrderRequest: PaidOrderRequest ) {
+    return this.ordersService.paidOrder(paidOrderRequest);
   }
 }

@@ -2,7 +2,7 @@ import { IsArray, IsEnum, IsString, Length } from 'class-validator';
 import { GenderList, SizesList } from '../enums';
 import { ModelsList } from '../enums/models.enum';
 
-export class CreateProductDto {
+export class CreateProductRequest {
   @IsEnum(ModelsList)
   public model: string;
   @IsEnum(GenderList)

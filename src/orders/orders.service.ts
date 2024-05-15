@@ -3,7 +3,7 @@ import { Order } from './schemas/order.schema';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { isMongoId } from 'class-validator';
-import { ChangeOrderStatusDto, CreateOrderRequest, OrderPaginationRequest, PaidOrderDto } from './dto';
+import { ChangeOrderStatusRequest, CreateOrderRequest, OrderPaginationRequest, PaidOrderRequest } from './dto';
 import { ProductsService } from 'src/products/products.service';
 import { UsersService } from 'src/users/users.service';
 
@@ -48,20 +48,20 @@ export class OrdersService {
     }
   };
 
-  findAll = async (orderPaginationDto: OrderPaginationRequest) => {
+  findAll = async (orderPaginationRequest: OrderPaginationRequest) => {
     const totalPages = await this.orderModel.countDocuments();
-    const currentPage = orderPaginationDto.page;
-    const perPage = orderPaginationDto.limit;
+    const currentPage = orderPaginationRequest.page;
+    const perPage = orderPaginationRequest.limit;
     let data;
 
-    if (!orderPaginationDto.status) {
+    if (!orderPaginationRequest.status) {
       data = await this.orderModel
         .find()
         .skip((currentPage - 1) * perPage)
         .limit(perPage);
     } else {
       data = await this.orderModel
-        .find({ status: orderPaginationDto.status })
+        .find({ status: orderPaginationRequest.status })
         .skip((currentPage - 1) * perPage)
         .limit(perPage);
     }
@@ -76,7 +76,7 @@ export class OrdersService {
     };
   }
 
-  async findOne(id: string): Promise<Order> {
+  findOne = async (id: string): Promise<Order> => {
     if (!isMongoId(id)) {
       throw new BadRequestException(`Invalid id: ${id}`);
     }
@@ -90,8 +90,8 @@ export class OrdersService {
     return order;
   }
 
-  async changeStatus(changeOrderStatusDto: ChangeOrderStatusDto) {
-    const { _id: id, status } = changeOrderStatusDto;
+  changeStatus = async (changeOrderStatusRequest: ChangeOrderStatusRequest): Promise<Order> => {
+    const { _id: id, status } = changeOrderStatusRequest;
     await this.findOne(id);
 
     const order = await this.orderModel.findById(id);
@@ -107,12 +107,12 @@ export class OrdersService {
     return order;
   }
 
-  async paidOrder(paidOrderDto: PaidOrderDto) {
-    const { orderId } = paidOrderDto;
+  paidOrder = async (paidOrderRequest: PaidOrderRequest): Promise<Order> => {
+    const { orderId } = paidOrderRequest;
 
     await this.findOne(orderId);
 
-    const order = await this.orderModel.findById(paidOrderDto.orderId);
+    const order = await this.orderModel.findById(paidOrderRequest.orderId);
 
     order.paid = true;
     order.paidAt = new Date();
